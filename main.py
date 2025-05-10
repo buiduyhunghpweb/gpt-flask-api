@@ -3,7 +3,7 @@ from supabase import create_client, Client
 from rapidfuzz import process
 
 # Gán trực tiếp thông tin Supabase
-SUPABASE_URL =" https://skrmxsdfimvelnkrnhif.supabase.co"
+SUPABASE_URL ="https://skrmxsdfimvelnkrnhif.supabase.co" 
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrcm14c2RmaW12ZWxua3JuaGlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY4NjAwMDEsImV4cCI6MjA2MjQzNjAwMX0.KFBDyJ92KrDFuI8atA_tq50IsAmPlixmsaNYiAeUbq4"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
