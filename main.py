@@ -9,7 +9,7 @@ def handle_request():
 
     if data.get("command") == "thêm dự án":
         return jsonify({
-            "status": "success",
+            "status": "đã là bản mới nhất rồi",
             "message": "Dự án đã được thêm thành công.",
             "received": data
         }), 200
