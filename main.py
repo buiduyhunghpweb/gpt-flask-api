@@ -112,13 +112,15 @@ def add_project():
             return jsonify({"error": "Thiếu trường 'ten_du_an'"}), 400
 
         # Cho phép các trường còn lại để trống nếu không có
+        
         project_data = {
             "ten_du_an": ten_du_an,
-            "cong_suat": data.get("cong_suat", None),
+            "cong_suat_mva": data.get("cong_suat_mva", None),
+            "chieu_dai_km": data.get("chieu_dai_km", None),
             "don_vi_quan_ly": data.get("don_vi_quan_ly", None),
             "quy_mo": data.get("quy_mo", None),
             "khoi_cong": data.get("khoi_cong", None),
-            "dong_dien": data.get("dong_dien", None),
+            "dong_dien": data.get("dong_dien", None)
         }
 
         result = supabase.table("project").insert(project_data).execute()
