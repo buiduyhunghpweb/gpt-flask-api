@@ -102,30 +102,32 @@ def list_events():
     })
 @app.route("/project", methods=["POST"])
 def add_project():
-    print("🔥 [POST] Nhận yêu cầu thêm dự án mới")
-    data = request.json
-    print("📥 Dữ liệu nhận:", data)
+    try:
+        print("🔥 [POST] Nhận yêu cầu thêm dự án mới")
+        data = request.json
+        print("📥 Dữ liệu nhận:", data)
 
-    # Bắt buộc phải có tên
-    ten_du_an = data.get("ten_du_an")
-    if not ten_du_an:
-        return jsonify({"error": "Thiếu trường 'ten_du_an'"}), 400
+        ten_du_an = data.get("ten_du_an")
+        if not ten_du_an:
+            return jsonify({"error": "Thiếu trường 'ten_du_an'"}), 400
 
-    # Dữ liệu có thể thiếu, nếu GPT không có
-    project_data = {
-        "ten_du_an": ten_du_an,
-        "cong_suat": data.get("cong_suat"),
-        "don_vi_quan_ly": data.get("don_vi_quan_ly"),
-        "quy_mo": data.get("quy_mo"),
-        "khoi_cong": data.get("khoi_cong"),
-        "dong_dien": data.get("dong_dien"),
-    }
+        project_data = {
+            "ten_du_an": ten_du_an,
+            "cong_suat": data.get("cong_suat"),
+            "don_vi_quan_ly": data.get("don_vi_quan_ly"),
+            "quy_mo": data.get("quy_mo"),
+            "khoi_cong": data.get("khoi_cong"),
+            "dong_dien": data.get("dong_dien"),
+        }
 
-    result = supabase.table("project").insert(project_data).execute()
+        result = supabase.table("project").insert(project_data).execute()
 
-    print("✅ Đã thêm dự án:", ten_du_an)
-    return jsonify({"success": True, "ten_du_an": ten_du_an}), 200
+        print("✅ Đã thêm dự án:", ten_du_an)
+        return jsonify({"success": True, "ten_du_an": ten_du_an}), 200
 
+    except Exception as e:
+        print("❌ Lỗi khi xử lý /project:", str(e))
+        return jsonify({"error": "Lỗi máy chủ", "chi_tiet": str(e)}), 500
 
 # --- Chạy local ---
 if __name__ == "__main__":
