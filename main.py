@@ -9,7 +9,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
 
-# --- Hàm chuẩn hóa tên ---
+# --- Chuẩn hóa tên dự án ---
 def normalize_name(name: str) -> str:
     if not isinstance(name, str):
         return ""
@@ -19,38 +19,30 @@ def normalize_name(name: str) -> str:
     name = name.replace(" ", "")
     return name
 
-# --- Tìm dự án phù hợp ---
+# --- Tìm dự án phù hợp hoặc gợi ý ---
 def find_best_project(input_text: str, project_list: list):
     norm_input = normalize_name(input_text)
-    print(f"\n🔍 Tìm dự án cho: '{input_text}' → '{norm_input}'")
+    suggestions = []
+    matched_project = None
 
-    matches = []
     for p in project_list:
         raw_name = p.get("ten_du_an")
         if not raw_name:
-            continue  # Bỏ qua nếu tên dự án thiếu
+            continue
         norm_db_name = normalize_name(raw_name)
 
-        # Ưu tiên khớp hoàn toàn
+        # Khớp hoàn toàn
         if "tba" in norm_db_name and norm_input in norm_db_name:
-            print(f"✅ Tìm thấy dự án phù hợp: {raw_name}")
-            return p
+            matched_project = p
+            break
 
-        # Nếu không khớp hoàn toàn, thêm vào danh sách gợi ý
+        # Gợi ý nếu có phần giống phía sau
         if "tba" in norm_db_name and norm_input[-12:] in norm_db_name:
-            matches.append(raw_name)
+            suggestions.append(raw_name)
 
-    # Trường hợp không có khớp hoàn toàn, trả danh sách gợi ý
-    if matches:
-        print("🔁 Không khớp chính xác. 📋 Gợi ý dự án gần đúng:")
-        for i, name in enumerate(matches, 1):
-            print(f"{i}. {name}")
-    else:
-        print("❌ Không tìm thấy dự án phù hợp hoặc gợi ý.")
+    return matched_project, suggestions
 
-    return None
-
-# --- API: Thêm sự kiện ---
+# --- API POST: Thêm sự kiện ---
 @app.route("/event", methods=["POST"])
 def add_event():
     print("🔥 [POST] Nhận yêu cầu thêm sự kiện mới")
@@ -59,10 +51,13 @@ def add_event():
 
     short_name = data.get("du_an")
     projects = supabase.table("project").select("id, ten_du_an").execute().data
-    matched_project = find_best_project(short_name, projects)
+    matched_project, suggestions = find_best_project(short_name, projects)
 
     if not matched_project:
-        return jsonify({"error": "Không tìm thấy dự án phù hợp"}), 404
+        return jsonify({
+            "error": "Không tìm thấy dự án phù hợp",
+            "suggestions": suggestions
+        }), 404
 
     print("✅ Dự án:", matched_project["ten_du_an"])
     event_data = {
@@ -77,9 +72,10 @@ def add_event():
     }
     supabase.table("events").insert(event_data).execute()
     print("✅ Đã ghi dữ liệu sự kiện vào Supabase")
+
     return jsonify({"success": True, "project": matched_project["ten_du_an"]})
 
-# --- API: Lấy danh sách sự kiện ---
+# --- API GET: Lấy danh sách sự kiện ---
 @app.route("/event", methods=["GET"])
 def list_events():
     print("🔍 [GET] Nhận yêu cầu lấy danh sách sự kiện")
@@ -87,14 +83,18 @@ def list_events():
     print("📥 Tham số dự án:", short_name)
 
     projects = supabase.table("project").select("id, ten_du_an").execute().data
-    matched_project = find_best_project(short_name, projects)
+    matched_project, suggestions = find_best_project(short_name, projects)
 
     if not matched_project:
-        return jsonify({"error": "Không tìm thấy dự án phù hợp"}), 404
+        return jsonify({
+            "error": "Không tìm thấy dự án phù hợp",
+            "suggestions": suggestions
+        }), 404
 
     print("✅ Dự án:", matched_project["ten_du_an"])
     events = supabase.table("events").select("*").eq("project_id", matched_project["id"]).execute().data
     print(f"📊 Số sự kiện tìm thấy: {len(events)}")
+
     return jsonify({
         "project": matched_project["ten_du_an"],
         "so_luong": len(events),
