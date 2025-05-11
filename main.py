@@ -118,6 +118,8 @@ def add_project():
             "cong_suat_mva": data.get("cong_suat_mva", None),
             "chieu_dai_km": data.get("chieu_dai_km", None),
             "don_vi_quan_ly": data.get("don_vi_quan_ly", None),
+            "so_van_ban_giao_nhiem_vu": data.get("so_van_ban_giao_nhiem_vu", None),
+            "ngay_van_ban_giao_nhiem_vu": data.get("ngay_van_ban_giao_nhiem_vu", None),
             "khoi_cong": data.get("khoi_cong", None),
             "hoan_thanh_dong_dien": data.get("hoan_thanh_dong_dien", None)
         }
