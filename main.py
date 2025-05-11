@@ -120,7 +120,7 @@ def add_project():
             "don_vi_quan_ly": data.get("don_vi_quan_ly", None),
             "quy_mo": data.get("quy_mo", None),
             "khoi_cong": data.get("khoi_cong", None),
-            "dong_dien": data.get("dong_dien", None)
+            "hoan_thanh_dong_dien": data.get("hoan_thanh_dong_dien", None)
         }
 
         result = supabase.table("project").insert(project_data).execute()
