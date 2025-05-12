@@ -131,6 +131,13 @@ def add_project():
     except Exception as e:
         print("❌ Lỗi khi xử lý /project:", str(e))
         return jsonify({"error": "Lỗi máy chủ", "chi_tiet": str(e)}), 500
+@app.route("/project-full", methods=["GET"])
+def get_all_projects():
+    try:
+        result = supabase.table("project").select("*").limit(1000).execute()
+        return jsonify(result.data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # --- Chạy local ---
 if __name__ == "__main__":
