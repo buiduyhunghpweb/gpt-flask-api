@@ -8,7 +8,6 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
-
 # --- Chuẩn hóa tên dự án ---
 def normalize_name(name: str) -> str:
     if not isinstance(name, str):
@@ -22,25 +21,25 @@ def normalize_name(name: str) -> str:
 # --- Tìm dự án phù hợp hoặc gợi ý ---
 def find_best_project(input_text: str, project_list: list):
     norm_input = normalize_name(input_text)
-    suggestions = []
-    matched_project = None
+    matches = []
 
     for p in project_list:
         raw_name = p.get("ten_du_an")
         if not raw_name:
             continue
+
         norm_db_name = normalize_name(raw_name)
 
-        # Khớp hoàn toàn
-        if "tba" in norm_db_name and norm_input in norm_db_name:
-            matched_project = p
-            break
+        # Nếu tên nhập vào nằm trong tên dự án sau chuẩn hóa
+        if norm_input in norm_db_name:
+            matches.append(p)
 
-        # Gợi ý nếu có phần giống phía sau
-        if "tba" in norm_db_name and norm_input[-12:] in norm_db_name:
-            suggestions.append(raw_name)
-
-    return matched_project, suggestions
+    if len(matches) == 1:
+        return matches[0], []
+    elif len(matches) > 1:
+        return None, matches
+    else:
+        return None, []
 
 # --- API POST: Thêm sự kiện ---
 @app.route("/event", methods=["POST"])
@@ -56,7 +55,7 @@ def add_event():
     if not matched_project:
         return jsonify({
             "error": "Không tìm thấy dự án phù hợp",
-            "suggestions": suggestions
+            "suggestions": [p["ten_du_an"] for p in suggestions]
         }), 404
 
     print("✅ Dự án:", matched_project["ten_du_an"])
@@ -88,7 +87,7 @@ def list_events():
     if not matched_project:
         return jsonify({
             "error": "Không tìm thấy dự án phù hợp",
-            "suggestions": suggestions
+            "suggestions": [p["ten_du_an"] for p in suggestions]
         }), 404
 
     print("✅ Dự án:", matched_project["ten_du_an"])
@@ -100,6 +99,8 @@ def list_events():
         "so_luong": len(events),
         "events": events
     })
+
+# --- API POST: Thêm dự án ---
 @app.route("/project", methods=["POST"])
 def add_project():
     try:
@@ -111,8 +112,6 @@ def add_project():
         if not ten_du_an:
             return jsonify({"error": "Thiếu trường 'ten_du_an'"}), 400
 
-        # Cho phép các trường còn lại để trống nếu không có
-        
         project_data = {
             "ten_du_an": ten_du_an,
             "cong_suat_mva": data.get("cong_suat_mva", None),
@@ -124,13 +123,15 @@ def add_project():
             "hoan_thanh_dong_dien": data.get("hoan_thanh_dong_dien", None)
         }
 
-        result = supabase.table("project").insert(project_data).execute()
+        supabase.table("project").insert(project_data).execute()
         print("✅ Đã thêm dự án:", ten_du_an)
         return jsonify({"success": True, "ten_du_an": ten_du_an}), 200
 
     except Exception as e:
         print("❌ Lỗi khi xử lý /project:", str(e))
         return jsonify({"error": "Lỗi máy chủ", "chi_tiet": str(e)}), 500
+
+# --- API GET: Toàn bộ danh sách dự án ---
 @app.route("/project-full", methods=["GET"])
 def get_all_projects():
     try:
