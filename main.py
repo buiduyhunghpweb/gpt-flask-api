@@ -13,12 +13,21 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 app = Flask(__name__)
 
 # --- Kiểm tra token từ header hoặc query param ---
+
 def check_auth_token():
     token = request.headers.get("Authorization", "")
     if token.startswith("Bearer "):
         token = token[7:]
+
     if not token:
         token = request.args.get("token", "")
+
+    if not token and request.method == "POST":
+        try:
+            token = request.json.get("token", "")
+        except:
+            token = ""
+
     return token == API_TOKEN
 
 # --- Chuẩn hóa tên dự án ---
