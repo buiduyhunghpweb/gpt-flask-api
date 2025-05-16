@@ -63,6 +63,22 @@ def get_events():
         "so_luong": len(events),
         "events": events
     })
+@app.route("/query", methods=["POST"])
+def query_data():
+    if not check_auth_token():
+        return jsonify({"error": "Không có quyền truy cập"}), 401
+
+    try:
+        data = request.json
+        sql = data.get("sql", "")
+        if not sql.lower().startswith("select"):
+            return jsonify({"error": "Chỉ hỗ trợ truy vấn SELECT"}), 400
+
+        result = supabase.rpc("run_custom_sql", {"query_text": sql}).execute()
+        return jsonify(result.data), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
