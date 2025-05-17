@@ -79,16 +79,24 @@ def query_data():
 
     try:
         data = request.json
-        sql = data.get("sql", "")
-        if not sql.lower().startswith("select"):
-            return jsonify({"error": "Chỉ hỗ trợ truy vấn SELECT"}), 400
+        sql_raw = data.get("sql", "")
+        sql = sql_raw.strip().lower()
 
-        result = supabase.rpc("run_custom_sql", {"query_text": sql}).execute()
-        return jsonify(result.data), 200
+        # Chặn các truy vấn nguy hiểm
+        blacklist = ["delete", "drop", "alter", "truncate"]
+        if any(sql.startswith(cmd) for cmd in blacklist):
+            return jsonify({"error": "Lệnh không được phép"}), 400
+
+        # Chỉ cho phép select, insert, update
+        allowed = ["select", "insert", "update"]
+        if not any(sql.startswith(cmd) for cmd in allowed):
+            return jsonify({"error": "Chỉ hỗ trợ SELECT, INSERT, UPDATE"}), 400
+
+        result = supabase.rpc("run_custom_sql", {"query_text": sql_raw}).execute()
+        return jsonify(result.data or {"success": True}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 if __name__ == "__main__":
     app.run(debug=True)
 
