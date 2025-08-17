@@ -46,16 +46,25 @@ def handle_query():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Safe wrapper endpoint: lấy sự kiện theo tên dự án (POST, không cần SQL trực tiếp)
-@app.route("/events/by-project", methods=["POST"])
+# Safe wrapper endpoint: lấy sự kiện theo tên dự án (GET)
+@app.route("/events/by-project", methods=["GET"])
 def events_by_project():
     try:
-        data = request.json
-        project_name = data.get("project", "")
+        project_name = request.args.get("project", "")
         if not project_name:
             return jsonify({"error": "Thiếu tên dự án"}), 400
 
         sql = f"SELECT * FROM events WHERE ten_du_an ILIKE '%{project_name}%' ORDER BY ngay_van_ban DESC LIMIT 3"
+        response, status = query_data(sql)
+        return jsonify(response), status
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Safe wrapper endpoint: liệt kê các sự kiện có tình trạng 'Đang thực hiện' (GET)
+@app.route("/events/in-progress", methods=["GET"])
+def events_in_progress():
+    try:
+        sql = "SELECT * FROM events WHERE tinh_trang ILIKE '%Đang thực hiện%' ORDER BY ngay_van_ban DESC"
         response, status = query_data(sql)
         return jsonify(response), status
     except Exception as e:
