@@ -91,12 +91,15 @@ def query_data():
         allowed = ["select", "insert", "update"]
         if not any(sql.startswith(cmd) for cmd in allowed):
             return jsonify({"error": "Chỉ hỗ trợ SELECT, INSERT, UPDATE"}), 400
-
+            
         result = supabase.rpc("run_custom_sql", {"query_text": sql_raw}).execute()
-        return jsonify(result.data or {"success": True}), 200
+        if result.data is None:
+            return jsonify({"result": []}), 200
+        return jsonify({"result": result.data}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     app.run(debug=True)
+
 
